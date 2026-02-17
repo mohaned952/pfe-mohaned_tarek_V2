@@ -1,0 +1,115 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum SubmissionStatus {
+  PENDING    @map("pending")
+  PROCESSING @map("processing")
+  DONE       @map("completed")
+  FAILED     @map("failed")
+  APPROVED   @map("approved")
+  SUBMITTED  @map("submitted")
+}
+
+model Teacher {
+  id        Int        @id @default(autoincrement())
+  name      String
+  email     String     @unique
+  password  String
+  students  Student[]
+  criteria  GradingCriteria[]
+  testSuites TestSuite[]
+
+  @@map("teachers")
+}
+
+model Student {
+  id          Int          @id @default(autoincrement())
+  name        String
+  email       String       @unique
+  groupName   String       @map("group_name")
+  year        String
+  password    String
+  teacherId   Int?         @map("teacher_id")
+  studentCode String?      @unique @map("student_code")
+  teacher     Teacher?     @relation(fields: [teacherId], references: [id])
+  submissions Submission[]
+
+  @@map("students")
+}
+
+model Submission {
+  id                      Int              @id @default(autoincrement())
+  studentId               Int              @map("student_id")
+  teacherId               Int?             @map("teacher_id")
+  repoUrl                 String           @map("repo_url")
+  submissionDate          DateTime         @default(now()) @map("submission_date")
+  status                  SubmissionStatus @default(PENDING)
+  computedGrade           Float?           @map("computed_grade")
+  evaluationNotes         String?          @map("evaluation_notes")
+  teacherFeedback         String?          @map("teacher_feedback")
+  correctionContext       String?          @map("correction_context")
+  student                 Student          @relation(fields: [studentId], references: [id])
+  testResults             TestResult[]
+
+  @@index([status])
+  @@index([teacherId])
+  @@index([studentId])
+  @@map("submissions")
+}
+
+model GradingCriteria {
+  id           Int      @id @default(autoincrement())
+  groupName    String   @map("group_name")
+  year         String
+  criteriaJson String   @map("criteria_json")
+  teacherId    Int?     @map("teacher_id")
+  teacher      Teacher? @relation(fields: [teacherId], references: [id])
+
+  @@unique([groupName, year])
+  @@map("grading_criteria")
+}
+
+model TestSuite {
+  id             Int      @id @default(autoincrement())
+  groupName      String   @map("group_name")
+  year           String
+  name           String   @default("Default Suite")
+  definitionJson String   @map("definition_json")
+  teacherId      Int?     @map("teacher_id")
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  teacher        Teacher? @relation(fields: [teacherId], references: [id])
+
+  @@unique([groupName, year])
+  @@index([teacherId])
+  @@map("test_suites")
+}
+
+model TestResult {
+  id           Int      @id @default(autoincrement())
+  submissionId Int      @map("submission_id")
+  testName     String   @map("test_name")
+  testType     String   @map("test_type")
+  language     String?  @map("language")
+  functionName String?  @map("function_name")
+  passed       Boolean
+  weight       Float    @default(1)
+  scoreEarned  Float    @default(0) @map("score_earned")
+  durationMs   Int      @default(0) @map("duration_ms")
+  errorMessage String?  @map("error_message")
+  detailsJson  String?  @map("details_json")
+  createdAt    DateTime @default(now()) @map("created_at")
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+  @@index([testType])
+  @@map("test_results")
+}

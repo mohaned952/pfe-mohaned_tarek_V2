@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Validate env template
+        run: test -f .env.example
+
+      - name: Prisma generate
+        run: npm run prisma:generate
+        env:
+          DATABASE_URL: file:./backend/db/platform.db
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Architecture compliance
+        run: npm run compliance:arch
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Integration tests
+        run: npm run test:integration
+
+      - name: Grading integrity compliance test
+        run: npm run test:compliance
+
+      - name: Build Docker image
+        run: docker build -t pfe-platform:ci .
+
+      - name: Start container smoke test
+        run: |
+          docker run -d --name pfe-platform-smoke -p 3000:3000 --env-file .env.example pfe-platform:ci
+          sleep 8
+          curl -f http://127.0.0.1:3000/api/health/live
+          docker logs pfe-platform-smoke
+          docker rm -f pfe-platform-smoke
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: build-test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start app
+        run: |
+          cp .env.example .env
+          npm run prisma:generate
+          npm run dev &
+          sleep 8
+
+      - name: Run E2E tests
+        run: npm run test:e2e

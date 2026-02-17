@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal - PFE Platform</title>
+    <meta name="description" content="Student portal for multi-language automated grading submissions and feedback.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/student.css?v=20260216c">
+</head>
+<body>
+    <main class="auth-shell" id="login-section" aria-label="Student login">
+        <section class="auth-card">
+            <h1>Student Login</h1>
+            <p>Track your submissions, test results, and feedback.</p>
+            <form id="login-form" class="stack-form" novalidate>
+                <label for="login-name">Full Name</label>
+                <input id="login-name" type="text" required placeholder="e.g. Alice Johnson" autocomplete="name">
+                <label for="login-student-id">Student ID</label>
+                <input id="login-student-id" type="text" required placeholder="e.g. 2024001234" autocomplete="username">
+                <button type="submit" class="btn btn-primary">Enter Portal</button>
+            </form>
+        </section>
+    </main>
+
+    <main id="dashboard-section" class="app hidden" aria-label="Student dashboard">
+        <aside class="sidebar" aria-label="Student navigation">
+            <div class="brand">
+                <h2>PFE Student</h2>
+                <p id="student-name-display">-</p>
+            </div>
+            <nav class="nav">
+                <button class="nav-item active" type="button" data-target="view-projects">Projects</button>
+                <button class="nav-item" type="button" data-target="view-submissions">Submissions</button>
+                <button class="nav-item" type="button" data-target="view-feedback">Feedback</button>
+            </nav>
+            <button id="logout-btn" class="btn btn-outline" type="button">Logout</button>
+        </aside>
+
+        <section class="workspace">
+            <header class="topbar">
+                <div>
+                    <h1 id="workspace-title">Projects</h1>
+                    <p id="workspace-subtitle">Submit GitHub repositories and review requirements.</p>
+                </div>
+                <span class="pill" id="student-realtime-pill">Live updates</span>
+            </header>
+
+            <section id="view-projects" class="view active" aria-label="Project submission and requirements">
+                <div class="panel-grid">
+                    <article class="panel">
+                        <h2>Submit Repository</h2>
+                        <form id="submit-repo-form" class="stack-form" novalidate>
+                            <label for="submit-teacher">Assigned Teacher</label>
+                            <select id="submit-teacher" required>
+                                <option value="">Loading teachers...</option>
+                            </select>
+
+                            <div class="form-grid">
+                                <div>
+                                    <label for="submit-group">Group</label>
+                                    <input id="submit-group" type="text" required placeholder="G1">
+                                </div>
+                                <div>
+                                    <label for="submit-year">Year</label>
+                                    <select id="submit-year" required>
+                                        <option value="">Select Level</option>
+                                        <option value="L1">L1</option>
+                                        <option value="L2">L2</option>
+                                        <option value="L3">L3</option>
+                                        <option value="M1">M1</option>
+                                        <option value="M2">M2</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <label for="repo-url">GitHub Repository URL</label>
+                            <input id="repo-url" type="url" required placeholder="https://github.com/username/repository">
+
+                            <button type="submit" class="btn btn-success">Submit for Automated Grading</button>
+                        </form>
+
+                        <div id="submission-status" class="status-box hidden" aria-live="polite"></div>
+                        <div class="progress-shell" aria-label="Test execution progress">
+                            <div id="submission-progress-bar" class="progress-bar"></div>
+                        </div>
+                    </article>
+
+                    <article class="panel">
+                        <h2>Project Requirements</h2>
+                        <p class="muted">Required functions, expected outputs, timeout, and weights defined by your teacher.</p>
+                        <div id="requirements-box" class="requirements-box">No requirements available yet. Submit your group/year first.</div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="view-submissions" class="view" aria-label="Submission history">
+                <article class="panel">
+                    <h2>My Submissions</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Repository</th>
+                                    <th>Status</th>
+                                    <th>Grade</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="submissions-table-body">
+                                <tr><td colspan="5" class="empty-row">No submissions yet.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+            </section>
+
+            <section id="view-feedback" class="view" aria-label="Feedback and test details">
+                <article class="panel">
+                    <h2>Submission Feedback</h2>
+                    <p class="muted" id="feedback-summary">Select a submission to view detailed feedback and test outcomes.</p>
+                    <div id="feedback-details" class="detail-box">No feedback selected.</div>
+                    <h3>Test Results</h3>
+                    <div id="feedback-tests" class="detail-box">No test results selected.</div>
+                </article>
+            </section>
+        </section>
+    </main>
+
+    <script src="js/student.js?v=20260216c"></script>
+</body>
+</html>

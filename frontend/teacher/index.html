@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Workspace - PFE Platform</title>
+    <meta name="description" content="Professional teacher workspace for automated multi-language grading.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/teacher.css?v=20260216f">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <main class="auth-shell" id="login-section" aria-label="Teacher login">
+        <section class="auth-card">
+            <h1>Teacher Login</h1>
+            <p>Access project grading, test management, and analytics.</p>
+            <form id="login-form" class="stack-form" novalidate>
+                <label for="login-teacher-name">Teacher Name</label>
+                <input id="login-teacher-name" type="text" required placeholder="e.g. tarek1" autocomplete="username">
+                <label for="login-password">Password</label>
+                <input id="login-password" type="password" required placeholder="Enter password" autocomplete="current-password">
+                <button type="submit" class="btn btn-primary">Sign in</button>
+            </form>
+        </section>
+    </main>
+
+    <main id="dashboard-section" class="app hidden" aria-label="Teacher dashboard">
+        <aside class="sidebar" aria-label="Primary navigation">
+            <div class="brand">
+                <h2>PFE Grading</h2>
+                <p>Teacher Console</p>
+            </div>
+            <nav class="nav">
+                <button class="nav-item active" data-target="view-dashboard" type="button">Dashboard</button>
+                <button class="nav-item" data-target="view-projects" type="button">Projects</button>
+                <button class="nav-item" data-target="view-submissions" type="button">Submissions</button>
+                <button class="nav-item" data-target="view-test-suites" type="button">Test Suites</button>
+                <button class="nav-item" data-target="view-analytics" type="button">Analytics</button>
+                <button class="nav-item" data-target="view-settings" type="button">Settings</button>
+            </nav>
+            <button id="logout-btn" class="btn btn-outline" type="button">Logout</button>
+        </aside>
+
+        <section class="workspace">
+            <header class="topbar">
+                <div>
+                    <h1 id="workspace-title">Dashboard</h1>
+                    <p id="workspace-subtitle">Overview of students, submissions, and automated grading status.</p>
+                </div>
+                <div class="topbar-actions">
+                    <span class="pill" id="realtime-indicator" title="Live refresh enabled">Live updates</span>
+                    <span class="pill info" id="agent-health-pill" title="Current grading pipeline health">Agent status: Ready</span>
+                </div>
+            </header>
+
+            <section id="view-dashboard" class="view active" aria-label="Dashboard overview">
+                <div class="cards-grid">
+                    <article class="metric-card" title="Number of students assigned to your account">
+                        <p>Total Students</p>
+                        <h3 id="metric-total-students">0</h3>
+                    </article>
+                    <article class="metric-card" title="All submissions for your students">
+                        <p>Total Submissions</p>
+                        <h3 id="metric-total-submissions">0</h3>
+                    </article>
+                    <article class="metric-card" title="Submissions with computed test-based grade">
+                        <p>Graded</p>
+                        <h3 id="metric-graded">0</h3>
+                    </article>
+                    <article class="metric-card" title="Submissions still pending evaluation or approval">
+                        <p>Ungraded</p>
+                        <h3 id="metric-ungraded">0</h3>
+                    </article>
+                </div>
+
+                <div class="cards-grid">
+                    <article class="metric-card compact" title="Submissions processed by grading agents">
+                        <p>Repos Processed</p>
+                        <h3 id="metric-repos-processed">0</h3>
+                    </article>
+                    <article class="metric-card compact" title="Total tests passed across visible submissions">
+                        <p>Tests Passed</p>
+                        <h3 id="metric-tests-passed">0</h3>
+                    </article>
+                    <article class="metric-card compact" title="Total tests failed across visible submissions">
+                        <p>Tests Failed</p>
+                        <h3 id="metric-tests-failed">0</h3>
+                    </article>
+                    <article class="metric-card compact" title="Current worker and pipeline availability">
+                        <p>Agents Status</p>
+                        <h3 id="metric-agent-status">Ready</h3>
+                    </article>
+                </div>
+
+                <div class="panel-grid">
+                    <article class="panel">
+                        <div class="panel-head">
+                            <h2>Submission Trends</h2>
+                            <div class="segmented">
+                                <button id="trend-daily" class="seg active" data-interval="daily" type="button">Daily</button>
+                                <button id="trend-weekly" class="seg" data-interval="weekly" type="button">Weekly</button>
+                                <button id="trend-monthly" class="seg" data-interval="monthly" type="button">Monthly</button>
+                            </div>
+                        </div>
+                        <canvas id="trend-chart" height="130"></canvas>
+                    </article>
+                    <article class="panel">
+                        <h2>Grade Distribution</h2>
+                        <canvas id="grade-chart" height="130"></canvas>
+                    </article>
+                </div>
+            </section>
+
+            <section id="view-projects" class="view" aria-label="Project management">
+                <div class="panel-grid two">
+                    <article class="panel">
+                        <h2>Create or Update Project</h2>
+                        <p class="muted">Project metadata and suite version are saved with the group/year suite definition.</p>
+                        <div class="form-grid">
+                            <div>
+                                <label for="suite-name">Project title</label>
+                                <input id="suite-name" type="text" placeholder="Algorithms Assignment 1">
+                            </div>
+                            <div>
+                                <label for="suite-version">Suite version</label>
+                                <input id="suite-version" type="text" placeholder="v1.0">
+                            </div>
+                            <div>
+                                <label for="suite-group">Group</label>
+                                <input id="suite-group" type="text" placeholder="G1">
+                            </div>
+                            <div>
+                                <label for="suite-year">Year</label>
+                                <input id="suite-year" type="text" placeholder="L3">
+                            </div>
+                            <div>
+                                <label for="suite-language">Language</label>
+                                <select id="suite-language">
+                                    <option value="">Auto-detect</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="java">Java</option>
+                                    <option value="c">C</option>
+                                    <option value="php">PHP</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="suite-entrypoint">Entrypoint</label>
+                                <input id="suite-entrypoint" type="text" placeholder="src/main.c">
+                            </div>
+                        </div>
+                        <label for="suite-description">Project description</label>
+                        <textarea id="suite-description" rows="3" placeholder="Describe objectives and constraints..."></textarea>
+                        <label for="suite-json">Test suite JSON</label>
+                        <textarea id="suite-json" rows="10" placeholder='{"requiredFunctions":["sum"],"tests":[{"name":"sum works","type":"unit","functionName":"sum","inputs":[2,3],"expectedOutput":5,"timeoutMs":1500,"weight":2}]}'></textarea>
+                        <div class="row-actions">
+                            <button id="save-suite-btn" class="btn btn-primary" type="button">Save Project Suite</button>
+                            <span class="muted" id="suite-status">Ready.</span>
+                        </div>
+                    </article>
+
+                    <article class="panel">
+                        <h2>Upload JSON/YAML Suite</h2>
+                        <label for="suite-format">Format</label>
+                        <select id="suite-format">
+                            <option value="json">JSON</option>
+                            <option value="yaml">YAML</option>
+                        </select>
+                        <label for="suite-upload-content">Suite content</label>
+                        <textarea id="suite-upload-content" rows="12" placeholder="Paste JSON or YAML content here..."></textarea>
+                        <button id="upload-suite-btn" class="btn btn-outline-dark" type="button">Upload Suite File</button>
+                    </article>
+                </div>
+            </section>
+
+            <section id="view-submissions" class="view" aria-label="Submission management">
+                <article class="panel">
+                    <h2>Submission Filters</h2>
+                    <div class="form-grid">
+                        <div>
+                            <label for="filter-group">Group</label>
+                            <input id="filter-group" type="text" placeholder="G1">
+                        </div>
+                        <div>
+                            <label for="filter-year">Year</label>
+                            <select id="filter-year">
+                                <option value="">All</option>
+                                <option value="L1">L1</option>
+                                <option value="L2">L2</option>
+                                <option value="L3">L3</option>
+                                <option value="M1">M1</option>
+                                <option value="M2">M2</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="filter-grade">Min grade</label>
+                            <input id="filter-grade" type="number" min="0" max="20" step="0.5" placeholder="10">
+                        </div>
+                        <div>
+                            <label for="filter-student-name">Student name</label>
+                            <input id="filter-student-name" type="text" placeholder="Search name">
+                        </div>
+                        <div>
+                            <label for="filter-date-from">From date</label>
+                            <input id="filter-date-from" type="date">
+                        </div>
+                        <div>
+                            <label for="filter-date-to">To date</label>
+                            <input id="filter-date-to" type="date">
+                        </div>
+                    </div>
+                    <div class="row-actions">
+                        <button id="clear-filters-btn" class="btn btn-outline-dark" type="button">Clear Filters</button>
+                        <button id="bulk-correction-btn" class="btn btn-warning" type="button">Run Correction for Filtered</button>
+                        <button id="approve-bulk-btn" class="btn btn-success" type="button">Approve Filtered</button>
+                    </div>
+                    <div class="form-grid">
+                        <div>
+                            <label for="bulk-approve-feedback">Shared feedback (optional)</label>
+                            <textarea id="bulk-approve-feedback" rows="2" placeholder="Shared teacher feedback"></textarea>
+                        </div>
+                    </div>
+                </article>
+
+                <div class="panel-grid two">
+                    <article class="panel">
+                        <h2>All Submissions</h2>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Repository</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Grade</th>
+                                        <th>Tests</th>
+                                        <th>Feedback</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="submissions-table-body">
+                                    <tr><td colspan="8" class="empty-row">No submissions found.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+
+                    <article class="panel">
+                        <h2>Submission Details</h2>
+                        <p class="muted" id="detail-student-name">Select a submission to review.</p>
+                        <p><a id="detail-repo-link" href="#" target="_blank" rel="noopener noreferrer">Repository link</a></p>
+                        <div class="detail-split">
+                            <div>
+                                <label for="correction-instructions">Correction instructions</label>
+                                <textarea id="correction-instructions" rows="3" placeholder="Optional grading instructions"></textarea>
+                            </div>
+                            <div>
+                                <label>Computed Grade (/20)</label>
+                                <div id="detail-computed-grade" class="detail-box">-</div>
+                                <label for="modal-teacher-feedback">Teacher feedback</label>
+                                <textarea id="modal-teacher-feedback" rows="3" placeholder="Feedback visible to student"></textarea>
+                            </div>
+                        </div>
+                        <div class="row-actions">
+                            <button id="start-correction-btn" class="btn btn-warning" type="button">Run Automated Correction</button>
+                            <button id="approve-grade-btn" class="btn btn-success" type="button">Approve Submission</button>
+                        </div>
+                        <h3>Evaluation Notes</h3>
+                        <div id="modal-evaluation-notes" class="detail-box">No feedback yet.</div>
+                        <h3>Executed Tests</h3>
+                        <div id="detail-tests" class="detail-tests">No tests yet.</div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="view-test-suites" class="view" aria-label="Test suite management">
+                <article class="panel">
+                    <h2>Configured Test Suites</h2>
+                    <p class="muted">Defines required functions, expected outputs, weights, and execution constraints.</p>
+                    <div id="suite-list" class="suite-list">
+                        <p class="empty-row">No test suites yet.</p>
+                    </div>
+                </article>
+            </section>
+
+            <section id="view-analytics" class="view" aria-label="Analytics and reports">
+                <div class="panel-grid">
+                    <article class="panel">
+                        <h2>Test Pass/Fail Rate</h2>
+                        <canvas id="passrate-chart" height="130"></canvas>
+                    </article>
+                    <article class="panel">
+                        <h2>Report Export</h2>
+                        <p class="muted">Export current filtered submissions for external reporting.</p>
+                        <div class="row-actions">
+                            <button id="export-csv-btn" class="btn btn-outline-dark" type="button">Export CSV</button>
+                            <button id="export-pdf-btn" class="btn btn-outline-dark" type="button">Export PDF Summary</button>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section id="view-settings" class="view" aria-label="Settings">
+                <article class="panel">
+                    <h2>Teacher Account</h2>
+                    <p class="muted" id="settings-teacher-info">Signed in teacher: -</p>
+                </article>
+            </section>
+        </section>
+    </main>
+
+    <script src="js/teacher.js?v=20260216f"></script>
+</body>
+</html>
