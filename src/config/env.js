@@ -1,4 +1,3 @@
-const path = require('node:path');
 const dotenv = require('dotenv');
 const { z } = require('zod');
 
@@ -30,10 +29,6 @@ const env = parsed.data;
 if (!env.DATABASE_URL.startsWith('file:')) {
   throw new Error('Only sqlite DATABASE_URL is supported in this project.');
 }
-
-const raw = env.DATABASE_URL.slice(5);
-const absolutePath = path.resolve(process.cwd(), raw);
-env.DATABASE_URL = `file:${path.relative(path.resolve(process.cwd(), 'prisma'), absolutePath).replace(/\\/g, '/')}`;
 process.env.DATABASE_URL = env.DATABASE_URL;
 
 module.exports = env;
