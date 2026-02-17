@@ -3,6 +3,20 @@ const jwt = require('jsonwebtoken');
 const prisma = require('../config/prisma');
 const env = require('../config/env');
 
+async function withRetry(operation, retries = 2, delayMs = 600) {
+  let lastError = null;
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (attempt >= retries) break;
+      await new Promise((resolve) => setTimeout(resolve, delayMs * (attempt + 1)));
+    }
+  }
+  throw lastError;
+}
+
 function buildSignedState({ roleHint, teacherCodeValid }) {
   return jwt.sign(
     {
@@ -55,7 +69,7 @@ async function exchangeCode(code) {
         code,
         redirect_uri: env.GITHUB_REDIRECT_URI
       },
-      { headers: { Accept: 'application/json' }, timeout: 15000 }
+      { headers: { Accept: 'application/json', 'User-Agent': 'pfe-platform' }, timeout: 20000 }
     );
   } catch (error) {
     const detail = error?.response?.data?.error_description || error?.response?.data?.error || error.message;
@@ -74,17 +88,25 @@ async function exchangeCode(code) {
 
   const client = axios.create({
     baseURL: env.GITHUB_API_URL,
-    timeout: 15000,
+    timeout: 30000,
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      Accept: 'application/vnd.github+json'
+      Accept: 'application/vnd.github+json',
+      'User-Agent': 'pfe-platform'
     }
   });
 
-  const [profile, emails] = await Promise.all([
-    client.get('/user'),
-    client.get('/user/emails').catch(() => ({ data: [] }))
-  ]);
+  let profile;
+  try {
+    profile = await withRetry(() => client.get('/user'));
+  } catch (error) {
+    const detail = error?.response?.data?.message || error.message || 'request failed';
+    const wrapped = new Error(`GitHub profile fetch failed: ${detail}`);
+    wrapped.status = 400;
+    throw wrapped;
+  }
+
+  const emails = await withRetry(() => client.get('/user/emails'), 1).catch(() => ({ data: [] }));
 
   const primaryEmail = (emails.data || []).find((item) => item.primary)?.email || profile.data.email || null;
 
