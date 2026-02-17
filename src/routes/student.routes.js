@@ -3,6 +3,7 @@ const { requireAuth } = require('../middlewares/auth');
 const { requireRole } = require('../middlewares/rbac');
 const { ok } = require('../utils/http');
 const {
+  listTeachers,
   createSubmission,
   listStudentSubmissions,
   getStudentSubmission
@@ -12,6 +13,11 @@ const router = express.Router();
 const wrap = (handler) => (req, res, next) => Promise.resolve(handler(req, res, next)).catch(next);
 
 router.use(requireAuth, requireRole('STUDENT'));
+
+router.get('/teachers', wrap(async (_req, res) => {
+  const teachers = await listTeachers();
+  return ok(res, teachers);
+}));
 
 router.get('/submissions', wrap(async (req, res) => {
   const data = await listStudentSubmissions(req.user.id);
@@ -27,6 +33,7 @@ router.get('/submissions/:id', wrap(async (req, res) => {
 router.post('/submissions', wrap(async (req, res) => {
   const created = await createSubmission({
     studentId: req.user.id,
+    teacherId: req.body.teacherId,
     repoUrl: req.body.repoUrl,
     repoBranch: req.body.repoBranch || 'main',
     language: req.body.language

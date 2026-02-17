@@ -20,12 +20,28 @@ function renderSubmission(item) {
   return `
     <article class="list-item">
       <div><strong>Repo:</strong> ${item.repoUrl}</div>
+      <div><strong>Teacher:</strong> ${item.evaluator?.username || '-'}</div>
       <div><strong>Language:</strong> ${item.language}</div>
       <div><strong>Status:</strong> ${item.status}</div>
       <div><strong>Grade:</strong> ${item.grade ?? '-'} / 20</div>
       ${feedback}
     </article>
   `;
+}
+
+async function loadTeachers() {
+  const teacherSelect = document.getElementById('teacherId');
+  try {
+    const teachers = await api('/api/student/teachers');
+    const options = teachers.map((teacher) => {
+      const label = teacher.email ? `${teacher.username} (${teacher.email})` : teacher.username;
+      return `<option value="${teacher.id}">${label}</option>`;
+    });
+    teacherSelect.innerHTML = '<option value="">Select teacher</option>' + options.join('');
+  } catch (error) {
+    teacherSelect.innerHTML = '<option value="">No teachers available</option>';
+    teacherSelect.disabled = true;
+  }
 }
 
 async function loadSubmissions() {
@@ -42,6 +58,7 @@ document.getElementById('submission-form').addEventListener('submit', async (eve
   event.preventDefault();
   const form = new FormData(event.currentTarget);
   const body = {
+    teacherId: Number(form.get('teacherId')),
     repoUrl: form.get('repoUrl'),
     repoBranch: form.get('repoBranch'),
     language: form.get('language')
@@ -62,3 +79,4 @@ document.getElementById('logout').addEventListener('click', async () => {
 });
 
 loadSubmissions();
+loadTeachers();

@@ -16,6 +16,9 @@
       <section class="panel">
         <h2>New Submission</h2>
         <form id="submission-form" class="grid-form">
+          <select name="teacherId" id="teacherId" required>
+            <option value="">Select teacher</option>
+          </select>
           <input name="repoUrl" placeholder="https://github.com/user/repo" required />
           <input name="repoBranch" placeholder="main" value="main" />
           <select name="language" required>
