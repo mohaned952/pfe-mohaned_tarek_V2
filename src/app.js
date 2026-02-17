@@ -1,4 +1,5 @@
 const path = require('node:path');
+const fs = require('node:fs');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
@@ -11,6 +12,12 @@ const { notFound, errorHandler } = require('./middlewares/error');
 
 function createApp() {
   const app = express();
+  const webDir = path.join(__dirname, '../web');
+  const legacyFrontendDir = path.join(__dirname, '../frontend');
+  const publicDir = fs.existsSync(webDir) ? webDir : legacyFrontendDir;
+  const landingPage = fs.existsSync(path.join(publicDir, 'index.html'))
+    ? path.join(publicDir, 'index.html')
+    : null;
 
   app.disable('x-powered-by');
   app.use(helmet());
@@ -34,8 +41,11 @@ function createApp() {
 
   app.use('/api', routes);
 
-  app.use(express.static(path.join(__dirname, '../web')));
-  app.get('/', (_req, res) => res.sendFile(path.join(__dirname, '../web/index.html')));
+  app.use(express.static(publicDir));
+  app.get('/', (_req, res, next) => {
+    if (!landingPage) return next(Object.assign(new Error('Landing page not found'), { status: 500 }));
+    return res.sendFile(landingPage);
+  });
 
   app.use(notFound);
   app.use(errorHandler);
