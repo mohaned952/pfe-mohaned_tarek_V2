@@ -16,35 +16,15 @@
           <a class="btn" href="/api/auth/github?role=student">Sign in as Student</a>
         </div>
 
-        <form id="teacher-form" class="invite-form">
+        <form id="teacher-form" class="invite-form" method="get" action="/api/auth/github">
+          <input type="hidden" name="role" value="teacher" />
           <label for="inviteCode">Teacher invitation code</label>
-          <input id="inviteCode" name="inviteCode" type="password" placeholder="teacher2026" />
+          <input id="inviteCode" name="inviteCode" type="password" placeholder="teacher2026" autocomplete="off" />
           <button type="submit" class="btn secondary">Sign in as Teacher</button>
         </form>
       </section>
     </main>
 
-    <script>
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('oauthRetry') === '1') {
-        alert('GitHub login code expired or was already used. Please click sign in again.');
-        if (window.history?.replaceState) {
-          window.history.replaceState({}, '', '/');
-        }
-      }
-      if (params.get('teacherCodeRequired') === '1') {
-        alert('Teacher account not found. Enter the invitation code to register as teacher.');
-        if (window.history?.replaceState) {
-          window.history.replaceState({}, '', '/');
-        }
-      }
-
-      const form = document.getElementById('teacher-form');
-      form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const inviteCode = encodeURIComponent(document.getElementById('inviteCode').value.trim());
-        window.location.href = `/api/auth/github?role=teacher&inviteCode=${inviteCode}`;
-      });
-    </script>
+    <script src="/assets/login.js"></script>
   </body>
 </html>
