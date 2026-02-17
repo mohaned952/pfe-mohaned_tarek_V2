@@ -22,19 +22,32 @@ function buildGithubAuthorizeUrl({ roleHint, inviteCode }) {
 }
 
 async function exchangeCode(code) {
-  const tokenResponse = await axios.post(
-    'https://github.com/login/oauth/access_token',
-    {
-      client_id: env.GITHUB_CLIENT_ID,
-      client_secret: env.GITHUB_CLIENT_SECRET,
-      code,
-      redirect_uri: env.GITHUB_REDIRECT_URI
-    },
-    { headers: { Accept: 'application/json' }, timeout: 15000 }
-  );
+  let tokenResponse;
+  try {
+    tokenResponse = await axios.post(
+      'https://github.com/login/oauth/access_token',
+      {
+        client_id: env.GITHUB_CLIENT_ID,
+        client_secret: env.GITHUB_CLIENT_SECRET,
+        code,
+        redirect_uri: env.GITHUB_REDIRECT_URI
+      },
+      { headers: { Accept: 'application/json' }, timeout: 15000 }
+    );
+  } catch (error) {
+    const detail = error?.response?.data?.error_description || error?.response?.data?.error || error.message;
+    const wrapped = new Error(`GitHub token exchange failed: ${detail}`);
+    wrapped.status = 400;
+    throw wrapped;
+  }
 
   const accessToken = tokenResponse.data.access_token;
-  if (!accessToken) throw new Error('Unable to fetch GitHub access token');
+  if (!accessToken) {
+    const reason = tokenResponse.data.error_description || tokenResponse.data.error || 'missing access token';
+    const error = new Error(`GitHub token exchange failed: ${reason}`);
+    error.status = 400;
+    throw error;
+  }
 
   const client = axios.create({
     baseURL: env.GITHUB_API_URL,
@@ -79,6 +92,16 @@ async function findOrCreateUser({ githubId, username, email, state }) {
       where: { id: existing.id },
       data: { username, ...(email ? { email } : {}) }
     });
+  }
+
+  if (email) {
+    const existingByEmail = await prisma.user.findUnique({ where: { email } });
+    if (existingByEmail) {
+      return prisma.user.update({
+        where: { id: existingByEmail.id },
+        data: { githubId, username }
+      });
+    }
   }
 
   return prisma.user.create({

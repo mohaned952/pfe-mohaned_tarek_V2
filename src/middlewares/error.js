@@ -7,6 +7,10 @@ function notFound(_req, res) {
 function errorHandler(err, _req, res, _next) {
   const status = Number(err.status || 500);
   const message = status >= 500 ? 'Internal server error' : err.message;
+  if (status >= 500) {
+    process.stderr.write(`[error] ${err.message}\n`);
+    if (err.stack) process.stderr.write(`${err.stack}\n`);
+  }
   return fail(res, status, message);
 }
 
