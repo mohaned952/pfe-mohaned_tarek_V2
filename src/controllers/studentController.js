@@ -1,39 +1,32 @@
 const { ok } = require('../utils/apiResponse');
 const service = require('../services/studentService');
 
-async function login(req, res) {
-  const data = await service.loginOrRegisterStudent({
-    name: req.body.name,
-    studentId: req.body.student_id
-  });
-  return ok(res, data);
+function respond(handler) {
+  return async (req, res) => ok(res, await handler(req));
 }
 
-async function submit(req, res) {
-  const data = await service.submitRepository({
+const login = respond((req) =>
+  service.loginOrRegisterStudent({
+    name: req.body.name,
+    studentId: req.body.student_id
+  })
+);
+
+const submit = respond((req) =>
+  service.submitRepository({
     studentId: req.body.studentId,
     teacherId: req.body.teacherId,
     repoUrl: req.body.repoUrl,
     groupName: req.body.group_name,
     year: req.body.year
-  });
-  return ok(res, data);
-}
+  })
+);
 
-async function submissions(req, res) {
-  const data = await service.listStudentSubmissions(req.params.studentId);
-  return ok(res, data);
-}
+const submissions = respond((req) => service.listStudentSubmissions(req.params.studentId));
 
-async function approvedGrades(req, res) {
-  const data = await service.listApprovedStudentGrades(req.params.studentId);
-  return ok(res, data);
-}
+const approvedGrades = respond((req) => service.listApprovedStudentGrades(req.params.studentId));
 
-async function requirements(req, res) {
-  const data = await service.getStudentRequirements(req.params.studentId);
-  return ok(res, data);
-}
+const requirements = respond((req) => service.getStudentRequirements(req.params.studentId));
 
 module.exports = {
   login,

@@ -1,67 +1,58 @@
 const { ok } = require('../utils/apiResponse');
 const service = require('../services/adminService');
 
-async function login(req, res) {
-  const data = await service.adminLogin(req.body);
-  return ok(res, data);
+function respond(handler) {
+  return async (req, res) => ok(res, await handler(req));
 }
 
-async function deleteAllStudents(req, res) {
-  const data = await service.deleteAllStudents({ adminPassword: req.headers['x-admin-password'] });
-  return ok(res, data);
-}
+const login = respond((req) => service.adminLogin(req.body));
 
-async function createTeacher(req, res) {
-  const data = await service.createTeacher(req.body);
-  return ok(res, data);
-}
+const deleteAllStudents = respond((req) =>
+  service.deleteAllStudents({ adminPassword: req.headers['x-admin-password'] })
+);
 
-async function revealPassword(req, res) {
-  const data = await service.revealTeacherPassword({
+const createTeacher = respond((req) => service.createTeacher(req.body));
+
+const revealPassword = respond((req) =>
+  service.revealTeacherPassword({
     adminPassword: req.body.adminPassword,
     teacherId: req.params.id
-  });
-  return ok(res, data);
-}
+  })
+);
 
-async function changePassword(req, res) {
-  const data = await service.changeTeacherPassword({
+const changePassword = respond((req) =>
+  service.changeTeacherPassword({
     adminPassword: req.body.adminPassword,
     teacherId: req.params.id,
     newPassword: req.body.newPassword
-  });
-  return ok(res, data);
-}
+  })
+);
 
-async function deleteTeacher(req, res) {
-  const data = await service.deleteTeacher({
+const deleteTeacher = respond((req) =>
+  service.deleteTeacher({
     adminPassword: req.headers['x-admin-password'],
     teacherId: req.params.id
-  });
-  return ok(res, data);
-}
+  })
+);
 
-async function analyticsSubmissions(req, res) {
-  const data = await service.getSubmissionTrends({
+const analyticsSubmissions = respond((req) =>
+  service.getSubmissionTrends({
     adminPassword: req.headers['x-admin-password'],
     interval: req.query.interval
-  });
-  return ok(res, data);
-}
+  })
+);
 
-async function analyticsGrades(req, res) {
-  const data = await service.getGradeDistribution({
+const analyticsGrades = respond((req) =>
+  service.getGradeDistribution({
     adminPassword: req.headers['x-admin-password']
-  });
-  return ok(res, data);
-}
+  })
+);
 
-async function analyticsAgents(req, res) {
-  const data = await service.getAgentMetrics({
+const analyticsAgents = respond((req) =>
+  service.getAgentMetrics({
     adminPassword: req.headers['x-admin-password']
-  });
-  return ok(res, data);
-}
+  })
+);
 
 module.exports = {
   login,

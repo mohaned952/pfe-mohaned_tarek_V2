@@ -161,12 +161,22 @@ class TestExecutor {
   }
 
   async commandExists(command) {
-    const result = await this.runLocalCommand({
-      command: 'sh',
-      args: ['-c', `command -v ${command}`],
-      cwd: process.cwd(),
-      timeoutMs: 1500
-    });
+    const isWindows = process.platform === 'win32';
+    const result = await this.runLocalCommand(
+      isWindows
+        ? {
+            command: 'where',
+            args: [command],
+            cwd: process.cwd(),
+            timeoutMs: 1500
+          }
+        : {
+            command: 'sh',
+            args: ['-c', `command -v ${command}`],
+            cwd: process.cwd(),
+            timeoutMs: 1500
+          }
+    );
     return result.code === 0;
   }
 
