@@ -1,15 +1,38 @@
 const axios = require('axios');
+const jwt = require('jsonwebtoken');
 const prisma = require('../config/prisma');
 const env = require('../config/env');
 
-const pendingStates = new Map();
+function buildSignedState({ roleHint, teacherCodeValid }) {
+  return jwt.sign(
+    {
+      roleHint: String(roleHint || 'student').toLowerCase(),
+      teacherCodeValid: Boolean(teacherCodeValid)
+    },
+    env.JWT_SECRET,
+    { expiresIn: '10m' }
+  );
+}
+
+function parseSignedState(state) {
+  try {
+    const payload = jwt.verify(String(state || ''), env.JWT_SECRET);
+    return {
+      roleHint: String(payload.roleHint || 'student').toLowerCase(),
+      teacherCodeValid: Boolean(payload.teacherCodeValid)
+    };
+  } catch (_error) {
+    return null;
+  }
+}
 
 function buildGithubAuthorizeUrl({ roleHint, inviteCode }) {
-  const state = Math.random().toString(36).slice(2);
-  pendingStates.set(state, {
-    roleHint: String(roleHint || 'student').toLowerCase(),
-    inviteCode: String(inviteCode || ''),
-    expiresAt: Date.now() + 10 * 60 * 1000
+  const normalizedRole = String(roleHint || 'student').toLowerCase();
+  const teacherCodeValid =
+    normalizedRole === 'teacher' && String(inviteCode || '').trim() === String(env.TEACHER_INVITE_CODE).trim();
+  const state = buildSignedState({
+    roleHint: normalizedRole,
+    teacherCodeValid
   });
 
   const params = new URLSearchParams({
@@ -78,14 +101,14 @@ function resolveInitialRole(stateData) {
 }
 
 async function findOrCreateUser({ githubId, username, email, state }) {
-  const stateData = pendingStates.get(state);
-  pendingStates.delete(state);
-  const requestedTeacher = stateData?.roleHint === 'teacher';
-  const hasValidTeacherCode = stateData?.inviteCode === env.TEACHER_INVITE_CODE;
-
-  if (stateData && stateData.expiresAt < Date.now()) {
-    throw new Error('OAuth state expired, please retry login');
+  const stateData = parseSignedState(state);
+  if (!stateData) {
+    const error = new Error('OAuth state is invalid or expired, please retry login');
+    error.status = 400;
+    throw error;
   }
+  const requestedTeacher = stateData?.roleHint === 'teacher';
+  const hasValidTeacherCode = Boolean(stateData?.teacherCodeValid);
 
   const existing = await prisma.user.findUnique({ where: { githubId } });
   if (existing) {
