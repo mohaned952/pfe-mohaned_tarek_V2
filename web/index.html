@@ -25,6 +25,11 @@
     </main>
 
     <script>
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('teacherCodeRequired') === '1') {
+        alert('Teacher account not found. Enter the invitation code to register as teacher.');
+      }
+
       const form = document.getElementById('teacher-form');
       form.addEventListener('submit', (event) => {
         event.preventDefault();

@@ -74,8 +74,7 @@ async function exchangeCode(code) {
 
 function resolveInitialRole(stateData) {
   if (!stateData) return 'STUDENT';
-  const teacherAllowed = stateData.roleHint === 'teacher' && stateData.inviteCode === env.TEACHER_INVITE_CODE;
-  return teacherAllowed ? 'TEACHER' : 'STUDENT';
+  return stateData.roleHint === 'teacher' ? 'TEACHER' : 'STUDENT';
 }
 
 async function findOrCreateUser({ githubId, username, email, state }) {
@@ -102,6 +101,15 @@ async function findOrCreateUser({ githubId, username, email, state }) {
         data: { githubId, username }
       });
     }
+  }
+
+  const requestedTeacher = stateData?.roleHint === 'teacher';
+  const hasValidTeacherCode = stateData?.inviteCode === env.TEACHER_INVITE_CODE;
+  if (requestedTeacher && !hasValidTeacherCode) {
+    const error = new Error('Teacher invitation code is required for first teacher login');
+    error.status = 403;
+    error.code = 'TEACHER_CODE_REQUIRED';
+    throw error;
   }
 
   return prisma.user.create({

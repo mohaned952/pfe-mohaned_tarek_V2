@@ -31,6 +31,9 @@ router.get('/github/callback', async (req, res, next) => {
     const target = user.role === 'TEACHER' ? '/teacher.html' : '/student.html';
     return res.redirect(target);
   } catch (error) {
+    if (error.code === 'TEACHER_CODE_REQUIRED') {
+      return res.redirect('/?teacherCodeRequired=1');
+    }
     return next(error);
   }
 });
