@@ -31,6 +31,9 @@ router.get('/github/callback', async (req, res, next) => {
     const target = user.role === 'TEACHER' ? '/teacher.html' : '/student.html';
     return res.redirect(target);
   } catch (error) {
+    if (String(error.message || '').includes('code passed is incorrect or expired')) {
+      return res.redirect('/?oauthRetry=1');
+    }
     if (error.code === 'TEACHER_CODE_REQUIRED') {
       return res.redirect('/?teacherCodeRequired=1');
     }
