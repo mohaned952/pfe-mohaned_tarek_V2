@@ -80,6 +80,8 @@ function resolveInitialRole(stateData) {
 async function findOrCreateUser({ githubId, username, email, state }) {
   const stateData = pendingStates.get(state);
   pendingStates.delete(state);
+  const requestedTeacher = stateData?.roleHint === 'teacher';
+  const hasValidTeacherCode = stateData?.inviteCode === env.TEACHER_INVITE_CODE;
 
   if (stateData && stateData.expiresAt < Date.now()) {
     throw new Error('OAuth state expired, please retry login');
@@ -87,24 +89,23 @@ async function findOrCreateUser({ githubId, username, email, state }) {
 
   const existing = await prisma.user.findUnique({ where: { githubId } });
   if (existing) {
+    const nextRole = requestedTeacher && hasValidTeacherCode ? 'TEACHER' : existing.role;
     return prisma.user.update({
       where: { id: existing.id },
-      data: { username, ...(email ? { email } : {}) }
+      data: { username, ...(email ? { email } : {}), role: nextRole }
     });
   }
 
   if (email) {
     const existingByEmail = await prisma.user.findUnique({ where: { email } });
     if (existingByEmail) {
+      const nextRole = requestedTeacher && hasValidTeacherCode ? 'TEACHER' : existingByEmail.role;
       return prisma.user.update({
         where: { id: existingByEmail.id },
-        data: { githubId, username }
+        data: { githubId, username, role: nextRole }
       });
     }
   }
-
-  const requestedTeacher = stateData?.roleHint === 'teacher';
-  const hasValidTeacherCode = stateData?.inviteCode === env.TEACHER_INVITE_CODE;
   if (requestedTeacher && !hasValidTeacherCode) {
     const error = new Error('Teacher invitation code is required for first teacher login');
     error.status = 403;
