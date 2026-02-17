@@ -1,43 +1,39 @@
+const path = require('node:path');
 const dotenv = require('dotenv');
-const path = require('path');
 const { z } = require('zod');
 
 dotenv.config();
 
-const envSchema = z.object({
+const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  PORT: z.coerce.number().default(3000),
-  DATABASE_URL: z.string().optional(),
-  DB_PATH: z.string().default('./backend/db/platform.db'),
-  GOOGLE_API_KEY: z.string().optional().default(''),
-  GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
+  PORT: z.coerce.number().int().positive().default(3000),
+  DATABASE_URL: z.string().default('file:./backend/db/platform.db'),
+  JWT_SECRET: z.string().min(24),
+  JWT_EXPIRES_IN: z.string().default('8h'),
+  GITHUB_CLIENT_ID: z.string().min(1),
+  GITHUB_CLIENT_SECRET: z.string().min(1),
+  GITHUB_REDIRECT_URI: z.string().url(),
+  GITHUB_APP_SCOPE: z.string().default('read:user user:email'),
+  GITHUB_API_URL: z.string().url().default('https://api.github.com'),
   GITHUB_TOKEN: z.string().optional().default(''),
-  TEST_EXECUTION_MODE: z.enum(['local', 'docker']).default('local'),
-  REDIS_URL: z.string().default('redis://127.0.0.1:6379'),
-  CORS_ORIGIN: z.string().default('http://localhost:3000'),
-  RATE_LIMIT_WINDOW_MS: z.coerce.number().default(15 * 60 * 1000),
-  RATE_LIMIT_MAX: z.coerce.number().default(300),
-  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
-  APP_VERSION: z.string().default('2.0.0')
+  TEACHER_INVITE_CODE: z.string().default('teacher2026'),
+  CORS_ORIGIN: z.string().default('http://localhost:3000')
 });
 
-const parsed = envSchema.safeParse(process.env);
+const parsed = schema.safeParse(process.env);
 if (!parsed.success) {
-  const details = parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ');
-  throw new Error(`Invalid environment configuration: ${details}`);
+  const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
+  throw new Error(`Invalid environment: ${issues}`);
 }
 
 const env = parsed.data;
-if (!env.DATABASE_URL) {
-  const dbPath = String(env.DB_PATH || './backend/db/platform.db');
-  const absoluteDbPath = path.resolve(process.cwd(), dbPath);
-  const prismaDir = path.resolve(process.cwd(), 'prisma');
-  let prismaRelativePath = path.relative(prismaDir, absoluteDbPath).replace(/\\/g, '/');
-  if (!prismaRelativePath.startsWith('.')) {
-    prismaRelativePath = `./${prismaRelativePath}`;
-  }
-  env.DATABASE_URL = `file:${prismaRelativePath}`;
+if (!env.DATABASE_URL.startsWith('file:')) {
+  throw new Error('Only sqlite DATABASE_URL is supported in this project.');
 }
+
+const raw = env.DATABASE_URL.slice(5);
+const absolutePath = path.resolve(process.cwd(), raw);
+env.DATABASE_URL = `file:${path.relative(path.resolve(process.cwd(), 'prisma'), absolutePath).replace(/\\/g, '/')}`;
 process.env.DATABASE_URL = env.DATABASE_URL;
 
 module.exports = env;

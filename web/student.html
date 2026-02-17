@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="header">
+        <h1>Student Dashboard</h1>
+        <button id="logout" class="btn secondary">Logout</button>
+      </header>
+
+      <section class="panel">
+        <h2>New Submission</h2>
+        <form id="submission-form" class="grid-form">
+          <input name="repoUrl" placeholder="https://github.com/user/repo" required />
+          <input name="repoBranch" placeholder="main" value="main" />
+          <select name="language" required>
+            <option value="">Select language</option>
+            <option value="c">C</option>
+            <option value="php">PHP</option>
+            <option value="javascript">JavaScript</option>
+            <option value="java">Java</option>
+            <option value="html-css">HTML/CSS</option>
+          </select>
+          <button class="btn" type="submit">Submit</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>My Submissions</h2>
+        <div id="submission-list" class="list"></div>
+      </section>
+    </main>
+
+    <script src="/assets/student.js"></script>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Teacher Dashboard</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="header">
+        <h1>Teacher Dashboard</h1>
+        <button id="logout" class="btn secondary">Logout</button>
+      </header>
+
+      <section class="panel">
+        <h2>Analytics</h2>
+        <pre id="analytics-box">Loading...</pre>
+      </section>
+
+      <section class="panel">
+        <h2>Create Test Suite</h2>
+        <form id="suite-form" class="grid-form">
+          <input name="title" placeholder="Suite title" required />
+          <select name="language" required>
+            <option value="">Language</option>
+            <option value="c">C</option>
+            <option value="php">PHP</option>
+            <option value="javascript">JavaScript</option>
+            <option value="java">Java</option>
+            <option value="html-css">HTML/CSS</option>
+          </select>
+          <textarea name="definition" rows="8" placeholder='{"language":"javascript","tests":[{"name":"t1","functionName":"solve","inputs":[],"expectedOutput":true,"maxScore":1}]}' required></textarea>
+          <button class="btn" type="submit">Save Suite</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Submissions</h2>
+        <div id="teacher-submission-list" class="list"></div>
+      </section>
+    </main>
+
+    <script src="/assets/teacher.js"></script>
+  </body>
+</html>

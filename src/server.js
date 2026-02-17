@@ -1,31 +1,16 @@
-const { createApp, env } = require('./app');
-const logger = require('./config/logger');
+const { createApp } = require('./app');
+const env = require('./config/env');
 const prisma = require('./config/prisma');
-const redis = require('./config/redis');
-const { initSentry } = require('./config/sentry');
 
-initSentry();
 const app = createApp();
 const server = app.listen(env.PORT, () => {
-  logger.info({ port: env.PORT, env: env.NODE_ENV }, 'HTTP server started');
+  process.stdout.write(`Server running on http://localhost:${env.PORT}\n`);
 });
 
-async function shutdown(signal) {
-  logger.info({ signal }, 'Graceful shutdown started');
-  server.close(async () => {
-    await prisma.$disconnect().catch(() => null);
-    await redis.quit().catch(() => null);
-    logger.info('Graceful shutdown complete');
-    process.exit(0);
-  });
-
-  setTimeout(() => {
-    logger.error('Forced shutdown');
-    process.exit(1);
-  }, 10000).unref();
+async function shutdown() {
+  await prisma.$disconnect().catch(() => null);
+  server.close(() => process.exit(0));
 }
 
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-
-module.exports = server;
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);

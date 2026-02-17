@@ -42,5 +42,19 @@ module.exports = [
         jest: 'readonly'
       }
     }
+  },
+  {
+    files: ['web/assets/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'script',
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        fetch: 'readonly',
+        alert: 'readonly',
+        FormData: 'readonly'
+      }
+    }
   }
 ];

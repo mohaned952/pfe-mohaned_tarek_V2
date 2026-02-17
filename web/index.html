@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>PFE Code Correction</title>
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <main class="page center">
+      <section class="panel login-panel">
+        <h1>Automated Code Correction Platform</h1>
+        <p>Sign in with GitHub. Students can submit repositories. Teachers can grade and manage test suites.</p>
+
+        <div class="actions-row">
+          <a class="btn" href="/api/auth/github?role=student">Sign in as Student</a>
+        </div>
+
+        <form id="teacher-form" class="invite-form">
+          <label for="inviteCode">Teacher invitation code</label>
+          <input id="inviteCode" name="inviteCode" type="password" placeholder="teacher2026" />
+          <button type="submit" class="btn secondary">Sign in as Teacher</button>
+        </form>
+      </section>
+    </main>
+
+    <script>
+      const form = document.getElementById('teacher-form');
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const inviteCode = encodeURIComponent(document.getElementById('inviteCode').value.trim());
+        window.location.href = `/api/auth/github?role=teacher&inviteCode=${inviteCode}`;
+      });
+    </script>
+  </body>
+</html>

@@ -1,17 +1,14 @@
 const express = require('express');
 
-const teacherRoutes = require('./teacherRoutes');
-const healthRoutes = require('./healthRoutes');
-const studentRoutes = require('./studentRoutes');
-const teacherPortalRoutes = require('./teacherPortalRoutes');
-const adminRoutes = require('./adminRoutes');
+const authRoutes = require('./auth.routes');
+const studentRoutes = require('./student.routes');
+const teacherRoutes = require('./teacher.routes');
 
 const router = express.Router();
 
-router.use('/health', healthRoutes);
-router.use('/teacher-workflow', teacherRoutes);
-router.use('/', studentRoutes);
-router.use('/', teacherPortalRoutes);
-router.use('/', adminRoutes);
+router.get('/health', (_req, res) => res.json({ ok: true, service: 'pfe-code-correction-platform' }));
+router.use('/auth', authRoutes);
+router.use('/student', studentRoutes);
+router.use('/teacher', teacherRoutes);
 
 module.exports = router;
